@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" fill="none">
+  <defs>
+    <!-- Metallic Steel Gradients -->
+    <linearGradient id="metal-light" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#CBD5E1" />
+      <stop offset="50%" stop-color="#E2E8F0" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+
+    <linearGradient id="metal-facet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="40%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+
+    <linearGradient id="metal-dark-col" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="25%" stop-color="#334155" />
+      <stop offset="75%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+
+    <linearGradient id="metal-bar-left" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+
+    <linearGradient id="metal-bar-right" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+
+    <!-- Arrow Gradients -->
+    <linearGradient id="arrow-metal" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="35%" stop-color="#64748B" />
+      <stop offset="70%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#CBD5E1" />
+    </linearGradient>
+
+    <linearGradient id="arrow-inlay" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="50%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+
+    <linearGradient id="arrowhead-left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#CBD5E1" />
+    </linearGradient>
+
+    <linearGradient id="arrowhead-right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CBD5E1" />
+      <stop offset="50%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+
+    <filter id="logo-drop-shadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <g filter="url(#logo-drop-shadow)">
+    <!-- ================= BAR 1 (Lowest, Leftmost) ================= -->
+    <g id="bar-1">
+      <!-- Outer Base Bar: x=24 to 76, y=260 to 420 -->
+      <polygon points="24,272 50,260 76,272 76,420 24,420" fill="url(#metal-bar-left)" />
+      <!-- Beveled Top Facets -->
+      <polygon points="24,272 50,260 50,292 24,272" fill="#CBD5E1" />
+      <polygon points="50,260 76,272 50,292 50,260" fill="#475569" />
+      <!-- Dark Central Inlay -->
+      <rect x="34" y="292" width="32" height="128" fill="url(#metal-dark-col)" />
+      <!-- Circuit traces on Bar 1 -->
+      <line x1="42" y1="305" x2="42" y2="350" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="42" cy="350" r="2.5" fill="#94A3B8" />
+      <line x1="42" y1="350" x2="54" y2="362" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="54" cy="362" r="2.5" fill="#CBD5E1" />
+      <line x1="58" y1="315" x2="58" y2="380" stroke="#475569" stroke-width="1.6" />
+      <circle cx="58" cy="315" r="2" fill="#64748B" />
+    </g>
+
+    <!-- ================= BAR 2 (Middle Left) ================= -->
+    <g id="bar-2">
+      <!-- Outer Base Bar: x=94 to 146, y=210 to 420 -->
+      <polygon points="94,222 120,210 146,222 146,420 94,420" fill="url(#metal-bar-left)" />
+      <!-- Beveled Top Facets -->
+      <polygon points="94,222 120,210 120,242 94,222" fill="#CBD5E1" />
+      <polygon points="120,210 146,222 120,242 120,210" fill="#475569" />
+      <!-- Dark Central Inlay -->
+      <rect x="104" y="242" width="32" height="178" fill="url(#metal-dark-col)" />
+      <!-- Circuit Traces on Bar 2 -->
+      <line x1="112" y1="255" x2="112" y2="310" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="112" cy="310" r="2.5" fill="#94A3B8" />
+      <line x1="126" y1="260" x2="126" y2="330" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="126" cy="260" r="2" fill="#CBD5E1" />
+      <line x1="126" y1="330" x2="116" y2="340" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="116" cy="340" r="2.5" fill="#64748B" />
+      <line x1="116" y1="370" x2="116" y2="405" stroke="#475569" stroke-width="1.6" />
+    </g>
+
+    <!-- ================= BAR 3 (Middle Right) ================= -->
+    <g id="bar-3">
+      <!-- Outer Base Bar: x=164 to 216, y=160 to 420 -->
+      <polygon points="164,172 190,160 216,172 216,420 164,420" fill="url(#metal-bar-left)" />
+      <!-- Beveled Top Facets -->
+      <polygon points="164,172 190,160 190,192 164,172" fill="#E2E8F0" />
+      <polygon points="190,160 216,172 190,192 190,160" fill="#475569" />
+      <!-- Dark Central Inlay -->
+      <rect x="174" y="192" width="32" height="228" fill="url(#metal-dark-col)" />
+      <!-- Circuit Traces on Bar 3 -->
+      <line x1="182" y1="205" x2="182" y2="280" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="182" cy="205" r="2.5" fill="#CBD5E1" />
+      <line x1="198" y1="210" x2="198" y2="295" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="198" cy="295" r="2.5" fill="#94A3B8" />
+      <line x1="182" y1="335" x2="182" y2="385" stroke="#475569" stroke-width="1.6" />
+      <circle cx="182" cy="385" r="2" fill="#64748B" />
+      <line x1="198" y1="345" x2="198" y2="400" stroke="#475569" stroke-width="1.6" />
+    </g>
+
+    <!-- ================= BAR 4 (Tallest, Rightmost) ================= -->
+    <g id="bar-4">
+      <!-- Outer Base Bar: x=234 to 286, y=140 to 420 -->
+      <polygon points="234,152 260,140 286,152 286,420 234,420" fill="url(#metal-bar-left)" />
+      <!-- Beveled Top Facets -->
+      <polygon points="234,152 260,140 260,172 234,152" fill="#E2E8F0" />
+      <polygon points="260,140 286,152 260,172 260,140" fill="#334155" />
+      <!-- Dark Central Inlay -->
+      <rect x="244" y="172" width="32" height="248" fill="url(#metal-dark-col)" />
+      <!-- Circuit Traces on Bar 4 -->
+      <line x1="252" y1="185" x2="252" y2="270" stroke="#64748B" stroke-width="1.6" />
+      <circle cx="252" cy="185" r="2.5" fill="#CBD5E1" />
+      <circle cx="252" cy="270" r="2.5" fill="#94A3B8" />
+      <line x1="268" y1="195" x2="268" y2="250" stroke="#64748B" stroke-width="1.6" />
+      <line x1="268" y1="250" x2="258" y2="260" stroke="#64748B" stroke-width="1.6" />
+      <line x1="252" y1="310" x2="252" y2="395" stroke="#475569" stroke-width="1.6" />
+      <circle cx="252" cy="395" r="2.5" fill="#64748B" />
+      <line x1="268" y1="320" x2="268" y2="380" stroke="#475569" stroke-width="1.6" />
+    </g>
+
+    <!-- ================= THE SWEEPING CYBERNETIC ARROW ================= -->
+    <g id="cyber-arrow">
+      <!-- Shadow under the cutting arrow -->
+      <path
+        d="M 20 405 Q 110 375 185 270 Q 240 195 285 140 L 295 155 Q 245 215 185 295 Q 110 395 20 425 Z"
+        fill="#0F172A"
+        opacity="0.5"
+      />
+
+      <!-- Arrow Lower Outer Bevel Rail -->
+      <path
+        d="M 22 410 Q 110 380 185 275 Q 242 195 288 135 L 282 118 Q 235 182 178 262 Q 105 365 22 392 Z"
+        fill="#334155"
+      />
+
+      <!-- Arrow Upper Outer Bevel Rail (Chrome Highlight) -->
+      <path
+        d="M 22 388 Q 110 355 182 248 Q 235 168 278 108 L 290 125 Q 245 188 190 270 Q 115 378 22 408 Z"
+        fill="#CBD5E1"
+      />
+
+      <!-- Arrow Central Main Inlay Body -->
+      <path
+        d="M 24 394 Q 110 362 184 254 Q 238 174 284 114 L 280 128 Q 238 186 186 266 Q 112 372 24 402 Z"
+        fill="url(#arrow-inlay)"
+      />
+
+      <!-- Internal Tech Groove and Circuit Traces on Arrow -->
+      <path
+        d="M 26 397 Q 110 365 184 257 Q 238 177 282 118"
+        stroke="#1E293B"
+        stroke-width="16"
+        stroke-linecap="round"
+      />
+
+      <!-- Glowing Conductive Circuit Traces on Arrow -->
+      <!-- Circuit Line 1 (Upper stream) -->
+      <path
+        d="M 32 394 Q 110 360 180 252 Q 225 185 265 130"
+        stroke="#64748B"
+        stroke-width="2.2"
+        fill="none"
+      />
+      <!-- Nodes on Circuit Line 1 -->
+      <circle cx="58" cy="383" r="3.2" fill="#E2E8F0" />
+      <circle cx="120" cy="336" r="3" fill="#94A3B8" />
+      <circle cx="178" cy="254" r="3" fill="#E2E8F0" />
+      <circle cx="230" cy="178" r="3.2" fill="#CBD5E1" />
+
+      <!-- Circuit Line 2 (Lower stream) -->
+      <path
+        d="M 40 401 Q 115 372 186 264 Q 232 195 272 142"
+        stroke="#475569"
+        stroke-width="2"
+        fill="none"
+      />
+      <!-- Nodes on Circuit Line 2 -->
+      <circle cx="85" cy="378" r="2.8" fill="#94A3B8" />
+      <circle cx="145" cy="312" r="2.8" fill="#E2E8F0" />
+      <circle cx="205" cy="226" r="2.8" fill="#CBD5E1" />
+
+      <!-- Cross Tech Segment lines on Arrow -->
+      <line x1="120" y1="336" x2="128" y2="344" stroke="#64748B" stroke-width="1.8" />
+      <line x1="178" y1="254" x2="188" y2="262" stroke="#64748B" stroke-width="1.8" />
+
+      <!-- ================= THE PROMINENT METALLIC ARROWHEAD ================= -->
+      <!-- Arrowhead Shadow -->
+      <polygon points="265,56 220,158 308,158" fill="#0F172A" opacity="0.4" />
+
+      <!-- Arrowhead Base Triangle (Overall Chrome) -->
+      <polygon points="265,50 216,152 304,152" fill="url(#metal-light)" />
+
+      <!-- Left Facet (Light Highlighting) -->
+      <polygon points="265,50 216,152 265,138" fill="url(#arrowhead-left)" />
+
+      <!-- Right Facet (Darker Metallic Shadow) -->
+      <polygon points="265,50 304,152 265,138" fill="url(#arrowhead-right)" />
+
+      <!-- Center Ridge Spine on Arrowhead -->
+      <line x1="265" y1="50" x2="265" y2="138" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" />
+
+      <!-- Inset Tech Circuitry on Left Facet -->
+      <line x1="242" y1="130" x2="252" y2="110" stroke="#334155" stroke-width="1.8" />
+      <circle cx="252" cy="110" r="2.5" fill="#E2E8F0" />
+      <line x1="252" y1="110" x2="258" y2="95" stroke="#334155" stroke-width="1.8" />
+      <circle cx="258" cy="95" r="2" fill="#FFFFFF" />
+
+      <!-- Inset Tech Circuitry on Right Facet -->
+      <line x1="288" y1="130" x2="278" y2="110" stroke="#1E293B" stroke-width="1.8" />
+      <circle cx="278" cy="110" r="2.5" fill="#94A3B8" />
+      <line x1="278" y1="110" x2="272" y2="95" stroke="#1E293B" stroke-width="1.8" />
+      <circle cx="272" cy="95" r="2" fill="#CBD5E1" />
+
+      <!-- Crisp Metallic Rim Highlights -->
+      <polyline points="216,152 265,50 304,152" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+    </g>
+  </g>
+</svg>

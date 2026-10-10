@@ -1,0 +1,6 @@
+{
+  "name": "outbid.lol - Pay-to-Rank Leaderboard",
+  "description": "Minimalist viral pay-to-rank leaderboard and real-time deal bidding platform. Outbid opponents to claim the #1 spot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
