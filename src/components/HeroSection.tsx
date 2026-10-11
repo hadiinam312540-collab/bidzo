@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Category, TimeFilter, BidEntry } from '../types';
 import { CATEGORIES } from './CategoryBar';
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 
 interface HeroSectionProps {
   timeFilter: TimeFilter;
@@ -35,6 +36,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onClaimRank,
   bids,
 }) => {
+  const [heroRef, isHeroVisible] = useIntersectionObserver();
   const [selectedCategory, setSelectedCategory] = useState<Category>(
     activeCategory && activeCategory !== 'All' && activeCategory !== 'Explore'
       ? (activeCategory as Category)
@@ -120,7 +122,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl px-4 py-4 sm:py-6">
+    <div ref={heroRef} className={`relative mx-auto w-full max-w-5xl px-4 py-4 sm:py-6 scroll-fade-in ${isHeroVisible ? 'is-visible' : ''}`}>
       {/* Background soft electric blue highlight glow */}
       <div
         aria-hidden="true"

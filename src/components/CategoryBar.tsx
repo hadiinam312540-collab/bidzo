@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { ChevronDown, Check, Filter, Compass, X } from 'lucide-react';
 import { Category } from '../types';
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 
 export const CATEGORIES: Category[] = [
   'All',
@@ -29,6 +29,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [categoryBarRef, isCategoryBarVisible] = useIntersectionObserver();
 
   // Close dropdown on click outside or escape key
   useEffect(() => {
@@ -59,12 +60,9 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   const activeCount = selectedCategory === 'All' ? totalBidsCount : categoryCounts[selectedCategory] || 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.3 }}
-      className="relative mx-auto w-full max-w-5xl px-4 sm:px-6"
+    <div
+      ref={categoryBarRef}
+      className={`relative mx-auto w-full max-w-5xl px-4 sm:px-6 scroll-fade-in ${isCategoryBarVisible ? 'is-visible' : ''}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
         {/* Consolidated Category Dropdown Menu */}
@@ -196,7 +194,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

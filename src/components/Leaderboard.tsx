@@ -15,6 +15,7 @@ import {
   Check,
 } from 'lucide-react';
 import { BidEntry, Platform } from '../types';
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 
 interface LeaderboardProps {
   bids: BidEntry[];
@@ -252,8 +253,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   };
 
+  const [leaderboardRef, isLeaderboardVisible] = useIntersectionObserver();
+
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:py-6 scroll-animate">
+    <div ref={leaderboardRef} className={`mx-auto w-full max-w-5xl px-4 py-4 sm:py-6 scroll-fade-in ${isLeaderboardVisible ? 'is-visible' : ''}`}>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Main Leaderboard Column (8 cols) */}
         <div className="lg:col-span-8">

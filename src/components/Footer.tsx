@@ -166,7 +166,6 @@ export const Footer: React.FC<FooterProps> = ({
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
               AtexPay Gateway Online
             </span>
-            <span className="text-slate-300">&bull;</span>
             <span className="flex items-center gap-1 text-slate-400">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
               Supabase Realtime

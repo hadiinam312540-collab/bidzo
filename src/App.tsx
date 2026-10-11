@@ -32,8 +32,10 @@ import { PrivacyModal } from './components/PrivacyModal';
 import { Footer } from './components/Footer';
 import { AtexPayCheckoutPage } from './components/AtexPayCheckoutPage';
 import { useDesktopNotifications } from './hooks/useDesktopNotifications';
+import { useIntersectionObserver } from './hooks/useIntersectionObserver';
 
 export default function App() {
+  const [mainRef, isMainVisible] = useIntersectionObserver();
   const { hasPermission, requestPermission, sendNotification } = useDesktopNotifications();
   // Route check for direct /checkout/atexpay URL navigation
   const [isCheckoutRoute, setIsCheckoutRoute] = useState<boolean>(() => {
@@ -465,7 +467,7 @@ export default function App() {
         setIsSearchOpen={setIsSearchOpen}
       />
 
-      <main className="pb-10 scroll-animate">
+      <main ref={mainRef} className={`pb-10 scroll-fade-in ${isMainVisible ? 'is-visible' : ''}`}>
         {/* Hero Section & Inline Form */}
         <HeroSection
           timeFilter={timeFilter}
