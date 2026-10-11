@@ -81,7 +81,7 @@ export const AtexPayCheckoutPage: React.FC<AtexPayCheckoutPageProps> = ({ onBack
 
     try {
       // Trigger AtexPay Webhook handler to simulate real-time blockchain / gateway confirmation
-      const response = await fetch('/api/atexpay-webhook', {
+      const response = await fetch('/api/atexpay/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

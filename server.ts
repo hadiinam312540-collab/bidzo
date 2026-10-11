@@ -9,6 +9,7 @@ import {
   verifyCheckoutSession,
   getPaidBidsFromStore,
 } from './src/lib/atexpay';
+import atexpayWebhookHandler from './api/atexpay/webhook';
 
 dotenv.config();
 
@@ -22,9 +23,30 @@ async function startServer() {
   // Trust proxy for secure protocol resolution behind reverse proxies (Cloud Run / AI Studio)
   app.set('trust proxy', 1);
 
-  // Middleware for parsing JSON & URL-encoded request bodies
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Middleware for parsing JSON & URL-encoded request bodies with raw body capture for signature verification
+  app.use(
+    express.json({
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf;
+      },
+    })
+  );
+  app.use(
+    express.urlencoded({
+      extended: true,
+      verify: (req: any, _res, buf) => {
+        if (!req.rawBody) req.rawBody = buf;
+      },
+    })
+  );
+  app.use(
+    express.raw({
+      type: (req) => !(req as any).rawBody,
+      verify: (req: any, _res, buf) => {
+        if (!req.rawBody) req.rawBody = buf;
+      },
+    })
+  );
 
   // --- ATEXPAY API ENDPOINTS ---
 
@@ -97,23 +119,16 @@ async function startServer() {
   });
 
   /**
-   * POST /api/atexpay-webhook
-   * Listens for payment events from AtexPay and updates leaderboard
+   * /api/atexpay/webhook (Serverless webhook function route)
+   * Handles POST webhook callbacks from AtexPay, verifies ATEXPAY_WEBHOOK_SECRET signature,
+   * and updates bid statuses automatically.
    */
-  app.post('/api/atexpay-webhook', async (req, res) => {
-    try {
-      const body = req.body || {};
-      const result = await handleAtexPayWebhook(body);
+  app.all('/api/atexpay/webhook', atexpayWebhookHandler);
 
-      return res.status(200).json(result);
-    } catch (err: any) {
-      console.error('[API /api/atexpay-webhook] Error:', err);
-      return res.status(400).json({
-        received: false,
-        error: err?.message || 'Error processing AtexPay webhook',
-      });
-    }
-  });
+  /**
+   * POST /api/atexpay-webhook (Backward compatibility route)
+   */
+  app.all('/api/atexpay-webhook', atexpayWebhookHandler);
 
   /**
    * GET /api/verify-checkout
