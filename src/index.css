@@ -219,3 +219,72 @@ header {
 .will-change-composite {
   will-change: transform, opacity;
 }
+
+.premium-glow-box {
+  position: relative;
+  background: #FFFFFF !important;
+  border-radius: 1rem;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 0 15px rgba(59, 130, 246, 0.06) !important;
+  transition: box-shadow 0.3s ease !important;
+}
+
+/* Outer Border Beam Track */
+.premium-glow-box::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent 0deg,
+    transparent 300deg,
+    rgba(59, 130, 246, 0.8) 340deg,
+    transparent 360deg
+  );
+  animation: borderRotate 4s linear infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Inner Solid Mask to block light from leaking inside */
+.premium-glow-box::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px; /* Border thickness */
+  background: #FFFFFF !important;
+  border-radius: calc(1rem - 1.5px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes borderRotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.premium-glow-box:hover, .premium-glow-box:focus-within {
+  box-shadow: 0 15px 35px -5px rgba(59, 130, 246, 0.15), 0 0 25px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Clear any outline from inner inputs and ensure interactivity */
+.premium-glow-box > * {
+  position: relative;
+  z-index: 2;
+}
+
+.premium-glow-box input, .premium-glow-box select {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  position: relative;
+  z-index: 2;
+}
+
+.premium-glow-box button {
+  position: relative;
+  z-index: 2;
+}

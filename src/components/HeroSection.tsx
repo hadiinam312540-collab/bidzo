@@ -248,11 +248,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Inline interactive submission form */}
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-2 shadow-sm font-sans transition-all duration-200"
+          className="w-full max-w-2xl font-sans"
         >
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="premium-glow-box rounded-2xl p-2 flex items-center gap-2">
             {/* a) Text Input: "Your product URL or @handle" */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <input
                 type="text"
                 placeholder="Your product URL or @handle (e.g. https://myproduct.com)"
@@ -261,16 +261,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   setProductTarget(e.target.value);
                   if (inputError) setInputError('');
                 }}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                className="w-full rounded-xl outline-none border-none bg-transparent px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition-colors"
               />
             </div>
 
             {/* b) Dropdown: "Choose a category" */}
-            <div className="relative sm:w-40">
+            <div className="relative sm:w-40 shrink-0">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value as Category)}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                className="w-full appearance-none rounded-xl outline-none border-none bg-transparent px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-900 transition-colors"
               >
                 {CATEGORIES.filter((c) => c !== 'All' && c !== 'Explore').map((cat) => (
                   <option key={cat} value={cat} className="bg-white text-slate-900">
@@ -284,7 +284,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* c) Primary CTA: Prominent rounded blue "Claim rank" button */}
             <button
               type="submit"
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all duration-150 hover:bg-blue-700 active:scale-95 transform-gpu sm:w-auto"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all duration-150 hover:bg-blue-700 active:scale-95 transform-gpu shrink-0"
             >
               <span>Claim rank</span>
               <ArrowRight className="h-4 w-4" />
