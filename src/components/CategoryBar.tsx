@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronDown, Check, Filter, Compass, X } from 'lucide-react';
 import { Category } from '../types';
 
@@ -58,7 +59,13 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   const activeCount = selectedCategory === 'All' ? totalBidsCount : categoryCounts[selectedCategory] || 0;
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.3 }}
+      className="relative mx-auto w-full max-w-5xl px-4 sm:px-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
         {/* Consolidated Category Dropdown Menu */}
         <div className="relative flex items-center gap-2" ref={dropdownRef}>
@@ -189,7 +196,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

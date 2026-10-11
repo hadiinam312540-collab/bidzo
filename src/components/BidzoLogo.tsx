@@ -13,7 +13,7 @@ interface BidzoLogoProps {
  * and circuitry lines, matching the official brand domain emblem.
  */
 export const BidzoLogoIcon: React.FC<{ sizeClass?: string; className?: string }> = ({
-  sizeClass = 'w-8 h-8 sm:w-9 sm:h-9',
+  sizeClass = 'w-8 h-8',
   className = '',
 }) => {
   const [hasError, setHasError] = useState(false);

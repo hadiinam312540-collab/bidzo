@@ -298,7 +298,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Micro-subtext */}
         <p className="mt-2.5 text-[11px] sm:text-xs text-slate-500 font-sans">
-          Instant placement &bull; Real-time click tracking &bull; High-intent discovery &bull; Outbid anytime
+          Instant placement &bull; Real-time click tracking &bull; High-intent discovery &bull; Rank #1 instantly on Bidzo
         </p>
       </div>
     </div>

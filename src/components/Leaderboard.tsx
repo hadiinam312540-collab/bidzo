@@ -253,7 +253,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:py-6">
+    <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:py-6 scroll-animate">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Main Leaderboard Column (8 cols) */}
         <div className="lg:col-span-8">
@@ -263,7 +263,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 Live Leaderboard
               </h2>
               <p className="text-xs text-slate-500">
-                Sorted strictly by bid value. Outbid anyone in real-time.
+                Sorted strictly by bid value. Claim top spots on Bidzo in real-time.
               </p>
             </div>
             <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">

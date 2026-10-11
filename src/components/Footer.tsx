@@ -7,7 +7,6 @@ interface FooterProps {
   onOpenPrivacy: () => void;
   onOpenRules: () => void;
   onOpenAbout: () => void;
-  onOpenSupabase: () => void;
   onOpenClaim: () => void;
 }
 
@@ -16,7 +15,6 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenPrivacy,
   onOpenRules,
   onOpenAbout,
-  onOpenSupabase,
   onOpenClaim,
 }) => {
   const supportEmail = 'contact.bidzo@gmail.com';

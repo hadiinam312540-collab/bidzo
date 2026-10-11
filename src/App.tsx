@@ -65,7 +65,6 @@ export default function App() {
     target?: string;
     category?: Category;
   }>({});
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState<boolean>(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
@@ -78,7 +77,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.remove('dark');
     localStorage.removeItem('outbid_dark_mode');
-    document.body.style.backgroundColor = '#FFFFFF';
+    document.body.style.backgroundColor = '#FAF9F6';
   }, []);
 
   // Check Supabase connection state & initial load
@@ -424,7 +423,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-600 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#FAF9F6] text-slate-900 font-sans selection:bg-blue-600 selection:text-white flex flex-col">
       {/* Toast Notification with GPU acceleration */}
       <AnimatePresence>
         {liveToast && (
@@ -455,8 +454,6 @@ export default function App() {
       <Header
         onlineCount={onlineCount}
         visitorCount={visitorCount}
-        supabaseConnected={supabaseConnected}
-        onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
         onOpenClaimModal={() => handleOpenClaimModal()}
         onOpenRulesModal={() => setIsRulesModalOpen(true)}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
@@ -466,13 +463,9 @@ export default function App() {
         onSearchChange={setSearchQuery}
         isSearchOpen={isSearchOpen}
         setIsSearchOpen={setIsSearchOpen}
-        hasNotificationPermission={hasPermission}
-        onRequestNotifications={async () => {
-          await requestPermission();
-        }}
       />
 
-      <main className="pb-10">
+      <main className="pb-10 scroll-animate">
         {/* Hero Section & Inline Form */}
         <HeroSection
           timeFilter={timeFilter}
@@ -541,7 +534,6 @@ export default function App() {
         onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         onOpenRules={() => setIsRulesModalOpen(true)}
         onOpenAbout={() => setIsAboutModalOpen(true)}
-        onOpenSupabase={() => setIsSupabaseModalOpen(true)}
         onOpenClaim={() => handleOpenClaimModal()}
       />
 
@@ -556,13 +548,6 @@ export default function App() {
         highestBid={activeCategoryHighestBid}
         bids={bids}
         onOpenTerms={() => setIsTermsModalOpen(true)}
-      />
-
-      {/* Supabase Config & Schema Modal */}
-      <SupabaseModal
-        isOpen={isSupabaseModalOpen}
-        onClose={() => setIsSupabaseModalOpen(false)}
-        onCredentialsUpdated={loadData}
       />
 
       {/* Rules Modal */}

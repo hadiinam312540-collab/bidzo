@@ -14,8 +14,6 @@ import { BidzoLogo } from './BidzoLogo';
 interface HeaderProps {
   onlineCount: number;
   visitorCount: number;
-  supabaseConnected: boolean;
-  onOpenSupabaseModal: () => void;
   onOpenClaimModal: () => void;
   onOpenRulesModal: () => void;
   onOpenAboutModal: () => void;
@@ -27,15 +25,11 @@ interface HeaderProps {
   onSearchChange: (q: string) => void;
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
-  hasNotificationPermission: boolean;
-  onRequestNotifications: () => Promise<void>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onlineCount,
   visitorCount,
-  supabaseConnected,
-  onOpenSupabaseModal,
   onOpenClaimModal,
   onOpenRulesModal,
   onOpenAboutModal,
@@ -45,13 +39,11 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   isSearchOpen,
   setIsSearchOpen,
-  hasNotificationPermission,
-  onRequestNotifications,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-gray-200/60 bg-white/80 backdrop-blur-md">
       {/* Slim 56px single header bar */}
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Left: Brand Logo + Nav items neatly aligned */}
@@ -129,32 +121,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <span className="text-slate-300">&middot;</span>
-          
-          {/* Notification Button */}
-          <button
-            onClick={onRequestNotifications}
-            title={hasNotificationPermission ? "Notifications enabled" : "Enable desktop notifications"}
-            className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all ${hasNotificationPermission ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900'}`}
-          >
-            {hasNotificationPermission ? '🔔 On' : '🔕 Notify'}
-          </button>
-
-          <span className="text-slate-300">&middot;</span>
-
-          {/* Supabase status badge */}
-          <button
-            onClick={onOpenSupabaseModal}
-            title="Supabase sync & realtime settings"
-            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-all hover:border-slate-300 hover:text-slate-900"
-          >
-            <Database className={`h-3 w-3 ${supabaseConnected ? 'text-emerald-600' : 'text-blue-600'}`} />
-            <span>{supabaseConnected ? 'Supabase Sync' : 'Local Realtime'}</span>
-          </button>
         </div>
-
-        {/* ... rest of the component ... */}
-
-
+        
         {/* Right Actions: Search + Claim Rank CTA + Mobile Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Search Toggle */}
@@ -273,17 +241,6 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="font-mono font-semibold text-slate-900">{visitorCount.toLocaleString()}</span>
               <span>visitors</span>
             </div>
-
-            <button
-              onClick={() => {
-                onOpenSupabaseModal();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
-            >
-              <Database className={`h-3 w-3 ${supabaseConnected ? 'text-emerald-600' : 'text-blue-600'}`} />
-              <span>{supabaseConnected ? 'Sync' : 'Test Mode'}</span>
-            </button>
           </div>
         </div>
       )}
