@@ -31,8 +31,10 @@ import { TermsModal } from './components/TermsModal';
 import { PrivacyModal } from './components/PrivacyModal';
 import { Footer } from './components/Footer';
 import { AtexPayCheckoutPage } from './components/AtexPayCheckoutPage';
+import { useDesktopNotifications } from './hooks/useDesktopNotifications';
 
 export default function App() {
+  const { hasPermission, requestPermission, sendNotification } = useDesktopNotifications();
   // Route check for direct /checkout/atexpay URL navigation
   const [isCheckoutRoute, setIsCheckoutRoute] = useState<boolean>(() => {
     return typeof window !== 'undefined' && window.location.pathname.startsWith('/checkout/atexpay');
@@ -40,6 +42,7 @@ export default function App() {
 
   // State
   const [bids, setBids] = useState<BidEntry[]>([]);
+  const lastDeposalTime = useRef<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<Category>('All');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time');
@@ -100,11 +103,30 @@ export default function App() {
     // Subscribe to realtime bids
     const unsubscribeBids = subscribeToLeaderboard((updatedBids) => {
       setBids((prev) => {
-        // If highest bid changed, notify with toast
-        if (updatedBids.length > 0 && prev.length > 0 && updatedBids[0].id !== prev[0].id) {
-          triggerToast(`👑 NEW #1 RANK! ${updatedBids[0].user_name} bid $${updatedBids[0].amount}!`);
+        const now = Date.now();
+        const leaderChanged = updatedBids.length > 0 && prev.length > 0 && updatedBids[0].id !== prev[0].id;
+
+        const newBids = updatedBids.map((bid, index) => {
+          let isFastest = false;
+          if (index === 0 && leaderChanged && lastDeposalTime.current > 0 && (now - lastDeposalTime.current < 60000)) {
+            isFastest = true;
+          }
+          return { ...bid, is_fastest: isFastest };
+        });
+
+        // Update deposal time if leader changed
+        if (leaderChanged) {
+          lastDeposalTime.current = now;
+
+          const newTop = updatedBids[0];
+          triggerToast(`👑 NEW #1 RANK! ${newTop.user_name} bid $${newTop.amount}!`);
+          sendNotification('👑 New #1 Bid!', {
+            body: `${newTop.user_name} just took the #1 spot with a bid of $${newTop.amount}!`,
+            icon: '/favicon.ico',
+          });
         }
-        return updatedBids;
+        
+        return newBids;
       });
     });
 
@@ -444,6 +466,10 @@ export default function App() {
         onSearchChange={setSearchQuery}
         isSearchOpen={isSearchOpen}
         setIsSearchOpen={setIsSearchOpen}
+        hasNotificationPermission={hasPermission}
+        onRequestNotifications={async () => {
+          await requestPermission();
+        }}
       />
 
       <main className="pb-10">

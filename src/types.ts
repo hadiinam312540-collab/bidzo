@@ -25,6 +25,7 @@ export interface BidEntry {
   clicks?: number;
   avatar_url?: string;
   is_verified?: boolean;
+  is_fastest?: boolean;
 }
 
 export interface DealEntry {

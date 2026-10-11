@@ -61,7 +61,7 @@ export const BidzoLogo: React.FC<BidzoLogoProps> = ({
 }) => {
   const sizeMap = {
     sm: { icon: 'w-7 h-7', text: 'text-base', badge: 'text-[9px]' },
-    md: { icon: 'w-8 h-8 sm:w-9 sm:h-9', text: 'text-lg sm:text-xl', badge: 'text-[10px]' },
+    md: { icon: 'w-10 h-10', text: 'text-lg sm:text-xl', badge: 'text-[10px]' },
     lg: { icon: 'w-10 h-10 sm:w-12 sm:h-12', text: 'text-2xl', badge: 'text-xs' },
   };
 
@@ -89,9 +89,6 @@ export const BidzoLogo: React.FC<BidzoLogoProps> = ({
               <span>LIVE</span>
             </span>
           </div>
-          <span className="text-[10px] font-medium text-slate-400 hidden sm:inline mt-0.5 tracking-wider uppercase font-mono">
-            Pay-to-Rank Discovery
-          </span>
         </div>
       )}
     </div>

@@ -27,6 +27,8 @@ interface HeaderProps {
   onSearchChange: (q: string) => void;
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
+  hasNotificationPermission: boolean;
+  onRequestNotifications: () => Promise<void>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -43,11 +45,13 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   isSearchOpen,
   setIsSearchOpen,
+  hasNotificationPermission,
+  onRequestNotifications,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="relative z-40 w-full border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
       {/* Slim 56px single header bar */}
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Left: Brand Logo + Nav items neatly aligned */}
@@ -62,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Desktop Navigation Links */}
           <nav className="hidden items-center gap-1.5 md:flex font-sans">
+            {/* ... navigation buttons ... */}
             <button
               onClick={() => onSelectNav('daily')}
               className={`rounded-lg px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-all ${
@@ -99,7 +104,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center / Stats (desktop only, subtle & compact) */}
         <div className="hidden lg:flex items-center gap-3 font-sans text-xs text-slate-500">
-          {/* Live Online Users */}
+          {/* ... existing stats ... */}
+           {/* Live Online Users */}
           <div className="flex items-center gap-1.5 font-medium">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
@@ -123,6 +129,17 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <span className="text-slate-300">&middot;</span>
+          
+          {/* Notification Button */}
+          <button
+            onClick={onRequestNotifications}
+            title={hasNotificationPermission ? "Notifications enabled" : "Enable desktop notifications"}
+            className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all ${hasNotificationPermission ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900'}`}
+          >
+            {hasNotificationPermission ? '🔔 On' : '🔕 Notify'}
+          </button>
+
+          <span className="text-slate-300">&middot;</span>
 
           {/* Supabase status badge */}
           <button
@@ -134,6 +151,9 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{supabaseConnected ? 'Supabase Sync' : 'Local Realtime'}</span>
           </button>
         </div>
+
+        {/* ... rest of the component ... */}
+
 
         {/* Right Actions: Search + Claim Rank CTA + Mobile Menu */}
         <div className="flex items-center gap-2 sm:gap-3">

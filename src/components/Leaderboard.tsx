@@ -384,6 +384,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                             aria-label={`Rank ${rank}`}
                           >
                             #{rank}
+                            {bid.is_fastest && (
+                              <div className="absolute -top-1 -right-1 font-heading text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                                ⚡ Fastest
+                              </div>
+                            )}
                           </div>
 
                           {/* Domain Logo / Favicon Container */}
