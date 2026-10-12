@@ -16,15 +16,14 @@ import {
   submitLeaderboardBid,
   recordBidClick,
   subscribeToLeaderboard,
-  getSupabaseCredentials,
   saveLocalBids,
 } from './lib/supabase';
+import { INITIAL_BIDS } from './lib/mockData';
 import { Header } from './components/Header';
 import { CategoryBar } from './components/CategoryBar';
 import { HeroSection } from './components/HeroSection';
 import { Leaderboard } from './components/Leaderboard';
 import { BidModal } from './components/BidModal';
-import { SupabaseModal } from './components/SupabaseModal';
 import { RulesModal } from './components/RulesModal';
 import { AboutModal } from './components/AboutModal';
 import { TermsModal } from './components/TermsModal';
@@ -42,7 +41,8 @@ export default function App() {
     return typeof window !== 'undefined' && window.location.pathname.startsWith('/checkout/atexpay');
   });
 
-  // State
+  // State: real database bids vs displayed leaderboard bids (with seed fallback when database is empty)
+  const [realBids, setRealBids] = useState<BidEntry[]>([]);
   const [bids, setBids] = useState<BidEntry[]>([]);
   const lastDeposalTime = useRef<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -55,7 +55,6 @@ export default function App() {
   // Live status indicators
   const [onlineCount, setOnlineCount] = useState<number>(14);
   const [visitorCount, setVisitorCount] = useState<number>(3482);
-  const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
 
   // Light mode high-contrast aesthetic
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -82,17 +81,22 @@ export default function App() {
     document.body.style.backgroundColor = '#FAF9F6';
   }, []);
 
-  // Check Supabase connection state & initial load
+  // Initial data load
   const loadData = async () => {
     setIsLoading(true);
-    const creds = getSupabaseCredentials();
-    setSupabaseConnected(creds.isConfigured);
-
     try {
       const bidsRes = await fetchLeaderboardBids();
-      setBids(bidsRes.data);
+      if (bidsRes.isFallback) {
+        setRealBids([]);
+        setBids(bidsRes.data);
+      } else {
+        setRealBids(bidsRes.data);
+        setBids(bidsRes.data);
+      }
     } catch (err) {
       console.error('Error loading initial data:', err);
+      setRealBids([]);
+      setBids(INITIAL_BIDS);
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +106,14 @@ export default function App() {
     loadData();
 
     // Subscribe to realtime bids
-    const unsubscribeBids = subscribeToLeaderboard((updatedBids) => {
+    const unsubscribeBids = subscribeToLeaderboard((updatedBids, isFallback) => {
+      if (isFallback) {
+        setRealBids([]);
+        setBids(updatedBids);
+        return;
+      }
+
+      setRealBids(updatedBids);
       setBids((prev) => {
         const now = Date.now();
         const leaderChanged = updatedBids.length > 0 && prev.length > 0 && updatedBids[0].id !== prev[0].id;
@@ -146,27 +157,46 @@ export default function App() {
 
       if (isSuccess) {
         if (sessionId) {
-          fetch(`/api/verify-checkout?session_id=${encodeURIComponent(sessionId)}`)
-            .then((r) => r.json())
-            .then(async (res) => {
-              if (res?.session) {
-                const s = res.session;
-                await submitLeaderboardBid({
-                  user_name: s.user_name,
-                  handle: s.handle,
-                  platform: (s.platform as Platform) || 'website',
-                  message: s.message || '',
-                  amount: Number(s.amount),
-                  category: s.category,
-                  product_url: s.profile_url,
-                });
+          const verifyEndpoints = [
+            `/.netlify/functions/verify-checkout?session_id=${encodeURIComponent(sessionId)}`,
+            `/api/verify-checkout?session_id=${encodeURIComponent(sessionId)}`,
+          ];
+          const checkVerification = async () => {
+            for (const ep of verifyEndpoints) {
+              try {
+                const r = await fetch(ep);
+                const ct = r.headers.get('content-type');
+                if (ct && ct.includes('application/json')) {
+                  const res = await r.json();
+                  if (res?.session) {
+                    const s = res.session;
+                    await submitLeaderboardBid({
+                      user_name: s.user_name,
+                      handle: s.handle,
+                      platform: (s.platform as Platform) || 'website',
+                      message: s.message || '',
+                      amount: Number(s.amount),
+                      category: s.category,
+                      product_url: s.profile_url,
+                    });
+                    const bidsRes = await fetchLeaderboardBids();
+                    if (bidsRes.isFallback) {
+                      setRealBids([]);
+                      setBids(bidsRes.data);
+                    } else {
+                      setRealBids(bidsRes.data);
+                      setBids(bidsRes.data);
+                    }
+                    return;
+                  }
+                }
+              } catch {
+                continue;
               }
-              const bidsRes = await fetchLeaderboardBids();
-              setBids(bidsRes.data);
-            })
-            .catch(() => {
-              loadData();
-            });
+            }
+            loadData();
+          };
+          checkVerification();
         } else {
           loadData();
         }
@@ -256,34 +286,31 @@ export default function App() {
     }, 4500);
   };
 
-  // Active category bids and highest bid in database for active category
-  const activeCategoryBids = useMemo(() => {
+  // Active category real bids in database
+  const activeCategoryRealBids = useMemo(() => {
     if (selectedCategory !== 'All' && selectedCategory !== 'Explore') {
-      return bids.filter(
+      return realBids.filter(
         (b) => b.category.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
-    return bids;
-  }, [bids, selectedCategory]);
+    return realBids;
+  }, [realBids, selectedCategory]);
 
-  const activeCategoryHighestBid = useMemo(() => {
-    if (activeCategoryBids.length === 0) return 0;
-    return Math.max(...activeCategoryBids.map((b) => b.amount));
-  }, [activeCategoryBids]);
+  // Outbid minimum calculation logic strictly tied to highest active bid in the database
+  const activeCategoryHighestRealBid = useMemo(() => {
+    if (activeCategoryRealBids.length === 0) return 0;
+    return Math.max(...activeCategoryRealBids.map((b) => b.amount));
+  }, [activeCategoryRealBids]);
 
-  const activeCategoryTopBidder = useMemo(() => {
-    if (activeCategoryBids.length === 0) return undefined;
-    return activeCategoryBids.reduce(
+  const activeCategoryTopRealBidder = useMemo(() => {
+    if (activeCategoryRealBids.length === 0) return undefined;
+    return activeCategoryRealBids.reduce(
       (prev, curr) => (curr.amount > prev.amount ? curr : prev),
-      activeCategoryBids[0]
+      activeCategoryRealBids[0]
     );
-  }, [activeCategoryBids]);
+  }, [activeCategoryRealBids]);
 
-  // Overall top bid amount across entire leaderboard
-  const highestBidAmount = bids.length > 0 ? bids[0].amount : 0;
-  const topBidderName = bids.length > 0 ? bids[0].user_name : undefined;
-
-  // Filtered Bids calculation
+  // Filtered Bids calculation (from displayed bids, which includes seed fallback when database is empty)
   const filteredBids = useMemo(() => {
     let list = [...bids];
 
@@ -344,13 +371,14 @@ export default function App() {
         ? (selectedCategory as Category)
         : 'Marketing');
 
-    const catBids = bids.filter(
+    const catRealBids = realBids.filter(
       (b) => b.category.toLowerCase() === targetCat.toLowerCase()
     );
-    const catHighest = catBids.length > 0 ? Math.max(...catBids.map((b) => b.amount)) : 0;
+    const catHighest = catRealBids.length > 0 ? Math.max(...catRealBids.map((b) => b.amount)) : 0;
 
-    // Dynamic Base Bid Logic:
-    // IF no bids exist: default $1. IF bids exist (highest = X): default $(X + 1).
+    // Outbid minimum calculation logic strictly tied to highest active bid in the database
+    // IF no real bids exist in database: default $1.
+    // IF real bids exist in database (highest = X): default $(X + 1).
     const dynamicAmount =
       prefillData?.amount !== undefined
         ? prefillData.amount
@@ -365,9 +393,17 @@ export default function App() {
   };
 
   const handleOutbidEntry = (entry: BidEntry) => {
+    const targetCat = entry.category as Category;
+    const catRealBids = realBids.filter(
+      (b) => b.category.toLowerCase() === targetCat.toLowerCase()
+    );
+    const catHighest = catRealBids.length > 0 ? Math.max(...catRealBids.map((b) => b.amount)) : 0;
+    // Strictly tied to database: if real bids exist, catHighest + 1; if no real bids exist, minimum is strictly $1
+    const outbidAmount = catHighest > 0 ? catHighest + 1 : 1;
+
     handleOpenClaimModal({
-      amount: entry.amount + 1,
-      category: entry.category as Category,
+      amount: outbidAmount,
+      category: targetCat,
     });
   };
 
@@ -390,8 +426,14 @@ export default function App() {
     product_url: string;
   }) => {
     await submitLeaderboardBid(bidData);
-    const { data } = await fetchLeaderboardBids();
-    setBids(data);
+    const bidsRes = await fetchLeaderboardBids();
+    if (bidsRes.isFallback) {
+      setRealBids([]);
+      setBids(bidsRes.data);
+    } else {
+      setRealBids(bidsRes.data);
+      setBids(bidsRes.data);
+    }
     triggerToast(`🎉 ${bidData.user_name} placed on leaderboard for $${bidData.amount}!`);
   };
 
@@ -472,8 +514,8 @@ export default function App() {
         <HeroSection
           timeFilter={timeFilter}
           onTimeFilterChange={setTimeFilter}
-          topBidAmount={activeCategoryHighestBid}
-          topBidderName={activeCategoryTopBidder?.user_name}
+          topBidAmount={activeCategoryHighestRealBid}
+          topBidderName={activeCategoryTopRealBidder?.user_name}
           activeCategory={selectedCategory}
           onClaimRank={(initialData) =>
             handleOpenClaimModal({
@@ -482,7 +524,7 @@ export default function App() {
               category: initialData.category,
             })
           }
-          bids={bids}
+          bids={realBids}
         />
 
         {/* Category Filter Bar */}
@@ -547,8 +589,8 @@ export default function App() {
         initialAmount={claimPrefill.amount}
         initialTarget={claimPrefill.target}
         initialCategory={claimPrefill.category}
-        highestBid={activeCategoryHighestBid}
-        bids={bids}
+        highestBid={activeCategoryHighestRealBid}
+        bids={realBids}
         onOpenTerms={() => setIsTermsModalOpen(true)}
       />
 

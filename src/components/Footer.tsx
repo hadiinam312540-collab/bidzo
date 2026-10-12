@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, ExternalLink, ShieldCheck, Heart, Sparkles, Scale, BookOpen, Database, ArrowUp } from 'lucide-react';
+import { Mail, ExternalLink, ShieldCheck, Heart, Sparkles, Scale, BookOpen, ArrowUp } from 'lucide-react';
 import { BidzoLogo } from './BidzoLogo';
 
 interface FooterProps {
@@ -90,15 +90,6 @@ export const Footer: React.FC<FooterProps> = ({
                   About Bidzo
                 </button>
               </li>
-              {/* <li>
-                <button
-                  onClick={onOpenSupabase}
-                  className="text-slate-600 hover:text-blue-600 transition-colors flex items-center gap-1"
-                >
-                  <Database className="h-3 w-3 text-emerald-600" />
-                  Supabase Live Sync
-                </button>
-              </li> */}
             </ul>
           </div>
 

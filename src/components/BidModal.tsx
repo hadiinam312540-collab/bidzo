@@ -149,24 +149,74 @@ export const BidModal: React.FC<BidModalProps> = ({
       // Dynamically provide window.location.origin so AtexPay redirects back to current domain
       const clientOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
-      // Trigger /api/create-checkout endpoint
-      const response = await fetch('/api/create-checkout', {
+      // Determine candidate API endpoints: support Netlify serverless functions and backend routes
+      const isNetlify =
+        typeof window !== 'undefined' &&
+        (window.location.hostname.includes('netlify.app') ||
+          window.location.pathname.startsWith('/.netlify'));
+
+      const candidateEndpoints = [
+        isNetlify ? '/.netlify/functions/create-checkout' : '/api/create-checkout',
+        '/.netlify/functions/create-checkout',
+        '/api/atexpay',
+        '/api/create-checkout',
+      ].filter((val, idx, self) => self.indexOf(val) === idx);
+
+      const payload = {
+        amount,
+        profile_url: finalUrl,
+        message: message.trim() || 'Claimed position on Bidzo',
+        category,
+        payment_method: paymentMethod,
+        user_name: userName.trim(),
+        handle: finalHandle,
+        platform,
+        origin: clientOrigin,
+      };
+
+      const options = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          amount,
-          profile_url: finalUrl,
-          message: message.trim() || 'Claimed position on Bidzo',
-          category,
-          payment_method: paymentMethod,
-          user_name: userName.trim(),
-          handle: finalHandle,
-          platform,
-          origin: clientOrigin,
-        }),
-      });
+        body: JSON.stringify(payload),
+      };
+
+      let response: Response | null = null;
+      let contentType: string | null = null;
+      let lastEndpoint = candidateEndpoints[0];
+
+      // Check endpoints in order until a valid JSON response is received
+      for (const endpoint of candidateEndpoints) {
+        lastEndpoint = endpoint;
+        try {
+          const res = await fetch(endpoint, options);
+          const ct = res.headers.get('content-type');
+          if (ct && ct.includes('application/json')) {
+            response = res;
+            contentType = ct;
+            break;
+          }
+          // Save the response in case all endpoints return non-JSON
+          response = res;
+          contentType = ct;
+        } catch {
+          // If network fetch fails on this endpoint, try next candidate
+          continue;
+        }
+      }
+
+      if (!response) {
+        throw new Error('Server returned HTML/non-JSON error. Check API endpoint & Netlify env keys.');
+      }
+
+      // Safe response parsing: Ensure server did not return HTML (e.g. 404/500/SPA rewrite) instead of JSON
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.warn(`[Checkout] Server returned HTML/non-JSON error from ${lastEndpoint}:`, text.slice(0, 150));
+        throw new Error('Server returned HTML/non-JSON error. Check API endpoint & Netlify env keys.');
+      }
 
       const checkoutData = await response.json();
 
@@ -465,7 +515,7 @@ export const BidModal: React.FC<BidModalProps> = ({
                     <span>AtexPay Secure Checkout</span>
                   </div>
                   <h3 className="mt-1.5 font-heading text-xl font-bold tracking-tight text-[#24211F]">
-                    Confirm &amp; Outbid
+                    Confirm &amp; Claim Spot
                   </h3>
                   <p className="mt-0.5 text-xs text-[#78716C]">
                     Review placement details before completing AtexPay checkout.
@@ -473,8 +523,33 @@ export const BidModal: React.FC<BidModalProps> = ({
                 </div>
 
                 {errorMsg && (
-                  <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs font-semibold text-rose-600">
-                    {errorMsg}
+                  <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-600">
+                    <p className="font-semibold">{errorMsg}</p>
+                    {errorMsg.includes('Server returned HTML') && (
+                      <div className="mt-1.5 pt-1.5 border-t border-rose-200/60">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const clientOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+                            const searchParams = new URLSearchParams({
+                              session_id: `atex_sess_${Date.now()}`,
+                              bid_id: `bid-${Date.now()}`,
+                              amount: String(amount),
+                              profile_url: productUrl,
+                              category,
+                              name: userName,
+                              handle,
+                              msg: message,
+                              method: paymentMethod,
+                            });
+                            window.location.href = `${clientOrigin}/checkout/atexpay?${searchParams.toString()}`;
+                          }}
+                          className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+                        >
+                          <span>Proceed via Direct Sandbox Checkout &rarr;</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 

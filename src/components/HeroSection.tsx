@@ -255,7 +255,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="relative flex-1 min-w-0">
               <input
                 type="text"
-                placeholder="Your product URL or @handle (e.g. https://myproduct.com)"
+                placeholder="Your URL or @handle"
                 value={productTarget}
                 onChange={(e) => {
                   setProductTarget(e.target.value);

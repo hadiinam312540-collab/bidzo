@@ -123,7 +123,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
           {isOpen && (
             <div
               role="listbox"
-              className="absolute left-0 sm:left-auto top-full z-30 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150 font-sans"
+              className="absolute left-0 sm:left-auto top-full z-50 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150 font-sans"
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 <span>Select Category</span>

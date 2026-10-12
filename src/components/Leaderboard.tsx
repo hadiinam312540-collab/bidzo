@@ -222,7 +222,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     e.preventDefault();
 
     // Construct deep-linked URL to this specific bidder
-    const url = new URL(window.location.href);
+    const url = new URL(window.location.origin + window.location.pathname);
     url.searchParams.set('bid', bid.id);
     url.hash = `bid-${bid.id}`;
     const shareUrl = url.toString();
@@ -290,14 +290,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <Crown className="h-6 w-6" />
               </div>
               <p className="font-heading text-base font-bold text-slate-900">
-                Leaderboard is empty
+                No active bids yet
               </p>
               <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                No active bids recorded in Supabase. Be the very first maker to claim Rank #1!
+                No active bids yet — be the first maker to claim Rank #1!
               </p>
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="flex flex-col gap-2.5">
               <AnimatePresence initial={false}>
                 {bids.map((bid, index) => {
                   const rank = index + 1;
@@ -373,26 +373,45 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       <div className="relative z-10 flex flex-col gap-3.5 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
                         {/* Left: Clean Rank Number + Domain Logo + Directory Hierarchy */}
                         <div className="flex items-start gap-3 sm:items-center sm:gap-3 min-w-0 flex-1">
-                          {/* Clean unboxed rank typography */}
-                          <div
-                            className={`shrink-0 select-none text-left font-mono font-black tabular-nums transition-transform duration-200 group-hover:scale-105 ${
+                          {/* Clickable rank number with deep link copy affordance */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleShareBid(e, bid, rank)}
+                            title={`Click to copy link to #${rank} ${bid.user_name}`}
+                            aria-label={`Rank #${rank} — click to copy link to clipboard`}
+                            className={`group/rank relative shrink-0 text-left font-mono font-black tabular-nums transition-all duration-150 cursor-pointer select-none rounded-lg p-1 -m-1 focus:outline-hidden active:scale-95 hover:scale-105 ${
                               isNumberOne
-                                ? 'text-2xl sm:text-3xl font-extrabold text-blue-600 drop-shadow-xs'
+                                ? 'text-2xl sm:text-3xl font-extrabold text-blue-600 drop-shadow-xs hover:text-blue-700 hover:bg-blue-50/70'
                                 : isNumberTwo
-                                ? 'text-xl sm:text-2xl font-bold text-slate-900'
+                                ? 'text-xl sm:text-2xl font-bold text-slate-900 hover:text-slate-800 hover:bg-slate-100/80'
                                 : isNumberThree
-                                ? 'text-xl sm:text-2xl font-bold text-amber-600'
-                                : 'text-lg sm:text-xl font-bold text-slate-400'
+                                ? 'text-xl sm:text-2xl font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50/80'
+                                : 'text-lg sm:text-xl font-bold text-slate-400 hover:text-slate-700 hover:bg-slate-100/80'
                             }`}
-                            aria-label={`Rank ${rank}`}
                           >
-                            #{rank}
+                            <span className="inline-flex items-center gap-1.5">
+                              <span>#{rank}</span>
+                              {copiedBidId === bid.id ? (
+                                <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-100 px-1.5 py-0.5 font-sans text-[10px] font-semibold text-emerald-800 shadow-2xs animate-in fade-in zoom-in-75 duration-150">
+                                  <Check className="h-2.5 w-2.5 text-emerald-600" />
+                                  <span className="hidden sm:inline">Copied</span>
+                                </span>
+                              ) : (
+                                <span
+                                  className="hidden sm:inline-flex opacity-0 transition-opacity duration-150 group-hover/rank:opacity-100 items-center gap-0.5 rounded-md bg-slate-100 px-1 py-0.5 text-[9px] font-sans font-medium text-slate-500"
+                                  title="Click to copy link"
+                                >
+                                  <Share2 className="h-2.5 w-2.5 text-slate-400" />
+                                  <span>Copy</span>
+                                </span>
+                              )}
+                            </span>
                             {bid.is_fastest && (
                               <div className="absolute -top-1 -right-1 font-heading text-[10px] font-bold uppercase tracking-wider text-blue-600">
                                 ⚡ Fastest
                               </div>
                             )}
-                          </div>
+                          </button>
 
                           {/* Domain Logo / Favicon Container */}
                           {(() => {
@@ -519,17 +538,19 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                               )}
                             </button>
 
-                            {/* Outbid Action Button */}
+                            {/* Claim Spot Action Button */}
                             <button
                               onClick={() => onOutbidEntry(bid)}
-                              className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all transform-gpu active:scale-95 ${
+                              title={`Claim spot above #${rank} for $${bid.amount + 1}`}
+                              aria-label={`Claim Spot ($${bid.amount + 1})`}
+                              className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all transform-gpu active:scale-95 cursor-pointer ${
                                 isNumberOne
                                   ? 'bg-blue-600 text-white shadow-xs hover:bg-blue-700'
                                   : 'border border-slate-200 bg-white text-slate-800 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600'
                               }`}
                             >
-                              <Sparkles className="h-3 w-3 text-blue-600 group-hover:text-blue-700" />
-                              <span>Outbid (${bid.amount + 1})</span>
+                              <Sparkles className={`h-3 w-3 ${isNumberOne ? 'text-white' : 'text-blue-600 group-hover:text-blue-700'}`} />
+                              <span>Claim Spot (${bid.amount + 1})</span>
                             </button>
                           </div>
                         </div>
@@ -572,15 +593,21 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 return (
                   <div key={bid.id} className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-bold ${
-                          idx === 0
-                            ? 'bg-blue-600 text-white shadow-2xs'
-                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      <button
+                        type="button"
+                        onClick={(e) => handleShareBid(e, bid, idx + 1)}
+                        title={`Click to copy link to #${idx + 1} ${bid.user_name}`}
+                        aria-label={`Rank #${idx + 1} — click to copy link`}
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-bold cursor-pointer transition-transform hover:scale-115 active:scale-95 focus:outline-hidden ${
+                          copiedBidId === bid.id
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : idx === 0
+                            ? 'bg-blue-600 text-white shadow-2xs hover:bg-blue-700'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
                         }`}
                       >
-                        {idx + 1}
-                      </span>
+                        {copiedBidId === bid.id ? '✓' : idx + 1}
+                      </button>
                       <DomainFaviconLogo
                         url={targetUrl}
                         name={bid.user_name}

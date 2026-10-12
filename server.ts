@@ -51,10 +51,9 @@ async function startServer() {
   // --- ATEXPAY API ENDPOINTS ---
 
   /**
-   * POST /api/create-checkout
-   * Initiates an AtexPay payment session and returns checkout URL
+   * Reusable checkout handler for /api/create-checkout and Netlify function routes
    */
-  app.post('/api/create-checkout', async (req, res) => {
+  const handleCreateCheckout = async (req: express.Request, res: express.Response) => {
     try {
       const {
         amount,
@@ -66,7 +65,7 @@ async function startServer() {
         handle,
         platform,
         origin: bodyOrigin,
-      } = req.body;
+      } = req.body || {};
 
       // Dynamically resolve client origin (prioritize body origin from browser window.location.origin)
       let resolvedOrigin =
@@ -116,7 +115,16 @@ async function startServer() {
         error: err?.message || 'Internal server error while creating checkout session',
       });
     }
-  });
+  };
+
+  /**
+   * POST /api/create-checkout, /.netlify/functions/create-checkout, /api/atexpay
+   * Initiates an AtexPay payment session and returns checkout URL
+   */
+  app.post('/api/create-checkout', handleCreateCheckout);
+  app.post('/.netlify/functions/create-checkout', handleCreateCheckout);
+  app.post('/api/atexpay', handleCreateCheckout);
+  app.post('/.netlify/functions/atexpay', handleCreateCheckout);
 
   /**
    * /api/atexpay/webhook (Serverless webhook function route)
@@ -124,17 +132,14 @@ async function startServer() {
    * and updates bid statuses automatically.
    */
   app.all('/api/atexpay/webhook', atexpayWebhookHandler);
-
-  /**
-   * POST /api/atexpay-webhook (Backward compatibility route)
-   */
   app.all('/api/atexpay-webhook', atexpayWebhookHandler);
+  app.all('/.netlify/functions/atexpay-webhook', atexpayWebhookHandler);
 
   /**
-   * GET /api/verify-checkout
+   * GET /api/verify-checkout & Netlify function alias
    * Validates checkout session and marks bid as paid
    */
-  app.get('/api/verify-checkout', async (req, res) => {
+  const handleVerifyCheckout = async (req: express.Request, res: express.Response) => {
     try {
       const sessionId = req.query.session_id as string;
       if (!sessionId) {
@@ -146,7 +151,10 @@ async function startServer() {
     } catch (err: any) {
       return res.status(500).json({ success: false, error: err?.message });
     }
-  });
+  };
+
+  app.get('/api/verify-checkout', handleVerifyCheckout);
+  app.get('/.netlify/functions/verify-checkout', handleVerifyCheckout);
 
   /**
    * GET /api/bids/paid

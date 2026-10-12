@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { BidEntry, DealEntry } from '../types';
+import { INITIAL_BIDS } from './mockData';
 
 // Local storage keys
 const STORAGE_KEY_BIDS = 'outbid_bids_v1';
@@ -63,9 +64,10 @@ const broadcastChannel = typeof window !== 'undefined' && 'BroadcastChannel' in 
   ? new BroadcastChannel('outbid_realtime_channel')
   : null;
 
-type ChangeListener<T> = (data: T) => void;
-const bidsListeners = new Set<ChangeListener<BidEntry[]>>();
-const dealsListeners = new Set<ChangeListener<DealEntry[]>>();
+type BidsChangeListener = (data: BidEntry[], isFallback?: boolean) => void;
+type DealsChangeListener = (data: DealEntry[]) => void;
+const bidsListeners = new Set<BidsChangeListener>();
+const dealsListeners = new Set<DealsChangeListener>();
 
 // Load or initialize local bids (strictly empty default, strips any stale mock IDs)
 export function getLocalBids(): BidEntry[] {
@@ -96,10 +98,21 @@ export function saveLocalBids(bids: BidEntry[]) {
   const sorted = [...bids].sort((a, b) => b.amount - a.amount);
   try {
     localStorage.setItem(STORAGE_KEY_BIDS, JSON.stringify(sorted));
-    bidsListeners.forEach(listener => listener(sorted));
-    broadcastChannel?.postMessage({ type: 'BIDS_UPDATED', payload: sorted });
+    bidsListeners.forEach(listener => listener(sorted, false));
+    broadcastChannel?.postMessage({ type: 'BIDS_UPDATED', payload: sorted, isFallback: false });
   } catch (e) {
     console.error('Failed to save local bids:', e);
+  }
+}
+
+export function clearAllLocalBids() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(STORAGE_KEY_BIDS);
+    bidsListeners.forEach(listener => listener(INITIAL_BIDS, true));
+    broadcastChannel?.postMessage({ type: 'BIDS_UPDATED', payload: INITIAL_BIDS, isFallback: true });
+  } catch (e) {
+    console.error('Failed to clear local bids:', e);
   }
 }
 
@@ -133,7 +146,7 @@ export function saveLocalDeals(deals: DealEntry[]) {
 if (broadcastChannel) {
   broadcastChannel.onmessage = (event) => {
     if (event.data?.type === 'BIDS_UPDATED') {
-      bidsListeners.forEach(l => l(event.data.payload));
+      bidsListeners.forEach(l => l(event.data.payload, event.data.isFallback));
     } else if (event.data?.type === 'DEALS_UPDATED') {
       dealsListeners.forEach(l => l(event.data.payload));
     }
@@ -142,13 +155,19 @@ if (broadcastChannel) {
 
 // --- DATA ACCESS LAYER ---
 
+export interface FetchLeaderboardBidsResult {
+  data: BidEntry[];
+  source: 'supabase' | 'local';
+  isFallback: boolean;
+}
+
 /**
  * Fetch leaderboard bids
- * Directly queries Supabase table 'leaderboard_bids'.
- * When Supabase table is empty (0 records), returns exactly 0 items ({ data: [] }).
- * No mock data, hardcoded initial state, or fallback arrays are returned.
+ * Queries database table 'leaderboard_bids'.
+ * When database table is empty (0 records), returns showcase seed bids ({ isFallback: true }).
+ * When real user bids exist, returns real database entries ({ isFallback: false }) with 100% priority.
  */
-export async function fetchLeaderboardBids(): Promise<{ data: BidEntry[]; source: 'supabase' | 'local' }> {
+export async function fetchLeaderboardBids(): Promise<FetchLeaderboardBidsResult> {
   const client = getSupabaseClient();
 
   if (client) {
@@ -159,12 +178,16 @@ export async function fetchLeaderboardBids(): Promise<{ data: BidEntry[]; source
         .order('amount', { ascending: false });
 
       if (error) {
-        console.warn('Supabase fetch failed for leaderboard_bids:', error);
-        return { data: [], source: 'supabase' };
+        console.warn('Database fetch failed for leaderboard_bids:', error.message);
+        const local = getLocalBids();
+        if (local.length > 0) {
+          return { data: local, source: 'local', isFallback: false };
+        }
+        return { data: INITIAL_BIDS, source: 'supabase', isFallback: true };
       }
 
-      if (Array.isArray(data)) {
-        // Map Supabase columns to BidEntry. If data is [], mapped is [] (0 items)
+      if (Array.isArray(data) && data.length > 0) {
+        // Map database columns to BidEntry
         const mapped: BidEntry[] = data.map(item => ({
           id: String(item.id || `bid-${Math.random().toString(36).slice(2, 9)}`),
           user_name: item.user_name || 'Anonymous Maker',
@@ -179,18 +202,33 @@ export async function fetchLeaderboardBids(): Promise<{ data: BidEntry[]; source
           avatar_url: item.avatar_url || `https://api.dicebear.com/7.x/shapes/svg?seed=${item.handle || item.user_name}`,
           is_verified: Boolean(item.is_verified),
         }));
-        return { data: mapped, source: 'supabase' };
+        return { data: mapped, source: 'supabase', isFallback: false };
       }
 
-      return { data: [], source: 'supabase' };
+      // Live query returned empty/zero results: check if local store has real bids
+      const local = getLocalBids();
+      if (local.length > 0) {
+        return { data: local, source: 'local', isFallback: false };
+      }
+
+      // No active bids recorded yet: populate showcase seed bids
+      return { data: INITIAL_BIDS, source: 'supabase', isFallback: true };
     } catch (err) {
-      console.warn('Supabase fetch exception:', err);
-      return { data: [], source: 'supabase' };
+      console.warn('Database fetch exception:', err);
+      const local = getLocalBids();
+      if (local.length > 0) {
+        return { data: local, source: 'local', isFallback: false };
+      }
+      return { data: INITIAL_BIDS, source: 'supabase', isFallback: true };
     }
   }
 
-  // Supabase not configured: return local bids (defaults to 0 items, never mock data)
-  return { data: getLocalBids(), source: 'local' };
+  // Database not configured: return local bids if any, otherwise fallback to seed bids
+  const local = getLocalBids();
+  if (local.length > 0) {
+    return { data: local, source: 'local', isFallback: false };
+  }
+  return { data: INITIAL_BIDS, source: 'local', isFallback: true };
 }
 
 /**
@@ -370,7 +408,7 @@ export async function placeDealBid(
 /**
  * Realtime subscriptions for Leaderboard
  */
-export function subscribeToLeaderboard(callback: (bids: BidEntry[]) => void): () => void {
+export function subscribeToLeaderboard(callback: (bids: BidEntry[], isFallback?: boolean) => void): () => void {
   bidsListeners.add(callback);
   const client = getSupabaseClient();
 
@@ -383,8 +421,8 @@ export function subscribeToLeaderboard(callback: (bids: BidEntry[]) => void): ()
           'postgres_changes',
           { event: '*', schema: 'public', table: 'leaderboard_bids' },
           async () => {
-            const { data } = await fetchLeaderboardBids();
-            callback(data);
+            const { data, isFallback } = await fetchLeaderboardBids();
+            callback(data, isFallback);
           }
         )
         .subscribe();

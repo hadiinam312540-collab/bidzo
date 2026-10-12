@@ -1,0 +1,41 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+# Route API endpoints directly to Netlify serverless functions
+[[redirects]]
+  from = "/api/create-checkout"
+  to = "/.netlify/functions/create-checkout"
+  status = 200
+
+[[redirects]]
+  from = "/api/atexpay/webhook"
+  to = "/.netlify/functions/atexpay"
+  status = 200
+
+[[redirects]]
+  from = "/api/atexpay-webhook"
+  to = "/.netlify/functions/atexpay"
+  status = 200
+
+[[redirects]]
+  from = "/api/atexpay"
+  to = "/.netlify/functions/atexpay"
+  status = 200
+
+[[redirects]]
+  from = "/api/verify-checkout"
+  to = "/.netlify/functions/verify-checkout"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Single Page App rewrite rule for React Router / client routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
