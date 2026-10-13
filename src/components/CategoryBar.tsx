@@ -62,11 +62,11 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   return (
     <div
       ref={categoryBarRef}
-      className={`relative mx-auto w-full max-w-5xl px-4 sm:px-6 scroll-fade-in ${isCategoryBarVisible ? 'is-visible' : ''}`}
+      className={`relative z-30 mx-auto w-full max-w-5xl px-4 sm:px-6 overflow-visible scroll-fade-in ${isCategoryBarVisible ? 'is-visible' : ''}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 overflow-visible">
         {/* Consolidated Category Dropdown Menu */}
-        <div className="relative flex items-center gap-2" ref={dropdownRef}>
+        <div className="relative z-[999] flex items-center gap-2 overflow-visible" ref={dropdownRef}>
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Category:
           </span>
@@ -123,7 +123,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
           {isOpen && (
             <div
               role="listbox"
-              className="absolute left-0 sm:left-auto top-full z-50 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150 font-sans"
+              className="absolute left-0 top-full z-[999] mt-2 w-64 sm:w-72 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl shadow-slate-900/15 animate-in fade-in zoom-in-95 duration-150 font-sans"
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 <span>Select Category</span>

@@ -311,9 +311,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   if (isNumberOne) {
                     cardRankClasses = 'animate-rank1-ambient border-blue-600 bg-gradient-to-r from-blue-50/60 via-white to-white shadow-sm shadow-blue-600/12 hover:border-blue-700';
                   } else if (isNumberTwo) {
-                    cardRankClasses = 'animate-rank2-ambient border-slate-300 bg-white shadow-2xs hover:border-slate-400';
+                    cardRankClasses = 'animate-rank2-ambient border-amber-300 bg-white shadow-2xs hover:border-amber-400';
                   } else if (isNumberThree) {
-                    cardRankClasses = 'animate-rank3-ambient border-amber-300 bg-white shadow-2xs hover:border-amber-400';
+                    cardRankClasses = 'animate-rank3-ambient border-slate-200 bg-white shadow-2xs hover:border-slate-300';
                   }
 
                   return (
@@ -331,9 +331,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         boxShadow: isNumberOne
                           ? '0 16px 32px -4px rgba(37, 99, 235, 0.22), 0 8px 16px -4px rgba(37, 99, 235, 0.12)'
                           : isNumberTwo
-                          ? '0 14px 28px -4px rgba(71, 85, 105, 0.16), 0 8px 14px -4px rgba(71, 85, 105, 0.08)'
-                          : isNumberThree
                           ? '0 14px 28px -4px rgba(217, 119, 6, 0.18), 0 8px 14px -4px rgba(217, 119, 6, 0.10)'
+                          : isNumberThree
+                          ? '0 14px 28px -4px rgba(71, 85, 105, 0.12), 0 8px 14px -4px rgba(71, 85, 105, 0.06)'
                           : '0 14px 28px -4px rgba(15, 23, 42, 0.08), 0 6px 12px -4px rgba(15, 23, 42, 0.04)',
                         transition: {
                           type: 'spring',
@@ -360,13 +360,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       {isNumberTwo && (
                         <div
                           aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 -z-0 opacity-15 bg-gradient-to-r from-transparent via-slate-400/30 to-transparent animate-card-shimmer"
+                          className="pointer-events-none absolute inset-0 -z-0 opacity-15 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent animate-card-shimmer"
                         />
                       )}
                       {isNumberThree && (
                         <div
                           aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 -z-0 opacity-15 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent animate-card-shimmer"
+                          className="pointer-events-none absolute inset-0 -z-0 opacity-15 bg-gradient-to-r from-transparent via-slate-400/20 to-transparent animate-card-shimmer"
                         />
                       )}
 
@@ -383,9 +383,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                               isNumberOne
                                 ? 'text-2xl sm:text-3xl font-extrabold text-blue-600 drop-shadow-xs hover:text-blue-700 hover:bg-blue-50/70'
                                 : isNumberTwo
-                                ? 'text-xl sm:text-2xl font-bold text-slate-900 hover:text-slate-800 hover:bg-slate-100/80'
-                                : isNumberThree
                                 ? 'text-xl sm:text-2xl font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50/80'
+                                : isNumberThree
+                                ? 'text-xl sm:text-2xl font-bold text-slate-800 hover:text-slate-900 hover:bg-slate-100/80'
                                 : 'text-lg sm:text-xl font-bold text-slate-400 hover:text-slate-700 hover:bg-slate-100/80'
                             }`}
                           >

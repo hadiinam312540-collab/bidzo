@@ -28,6 +28,7 @@ import { RulesModal } from './components/RulesModal';
 import { AboutModal } from './components/AboutModal';
 import { TermsModal } from './components/TermsModal';
 import { PrivacyModal } from './components/PrivacyModal';
+import { SupportBot } from './components/SupportBot';
 import { Footer } from './components/Footer';
 import { AtexPayCheckoutPage } from './components/AtexPayCheckoutPage';
 import { useDesktopNotifications } from './hooks/useDesktopNotifications';
@@ -477,7 +478,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 450, damping: 30 }}
-            className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xl shadow-slate-900/10 transform-gpu will-change-transform"
+            className="fixed bottom-20 right-4 sm:bottom-20 sm:right-6 z-50 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xl shadow-slate-900/10 transform-gpu will-change-transform"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/25">
               <Sparkles className="h-4 w-4" />
@@ -509,7 +510,7 @@ export default function App() {
         setIsSearchOpen={setIsSearchOpen}
       />
 
-      <main ref={mainRef} className={`pb-10 scroll-fade-in ${isMainVisible ? 'is-visible' : ''}`}>
+      <main ref={mainRef} className={`pb-10 overflow-visible scroll-fade-in ${isMainVisible ? 'is-visible' : ''}`}>
         {/* Hero Section & Inline Form */}
         <HeroSection
           timeFilter={timeFilter}
@@ -528,7 +529,7 @@ export default function App() {
         />
 
         {/* Category Filter Bar */}
-        <div className="mt-2 sm:mt-3">
+        <div className="relative z-30 mt-2 sm:mt-3 overflow-visible">
           <CategoryBar
             selectedCategory={selectedCategory}
             onSelectCategory={(cat) => setSelectedCategory(cat)}
@@ -616,6 +617,12 @@ export default function App() {
       <PrivacyModal
         isOpen={isPrivacyModalOpen}
         onClose={() => setIsPrivacyModalOpen(false)}
+      />
+
+      {/* Floating AI Support Bot Widget */}
+      <SupportBot
+        onOpenClaim={() => handleOpenClaimModal()}
+        onOpenRules={() => setIsRulesModalOpen(true)}
       />
     </div>
   );
