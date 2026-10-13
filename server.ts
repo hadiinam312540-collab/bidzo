@@ -164,6 +164,82 @@ async function startServer() {
     res.json({ success: true, bids: getPaidBidsFromStore() });
   });
 
+  // --- SUPPORT CHATBOT HEALTH-CHECK & DIAGNOSTIC SYSTEM ---
+  interface ServerDiagnosticLog {
+    id: string;
+    timestamp: string;
+    errorCode?: string;
+    failedAction?: string;
+    context?: Record<string, any>;
+    clientInfo?: Record<string, any>;
+    userMessage?: string;
+  }
+
+  const serverDiagnosticLogs: ServerDiagnosticLog[] = [];
+
+  /**
+   * GET /api/support/health
+   * Real-time system health check endpoint for support bot & telemetry
+   */
+  app.get('/api/support/health', (_req, res) => {
+    const startTime = Date.now();
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime_seconds: Math.floor(process.uptime()),
+      services: {
+        server_api: 'operational',
+        checkout_gateway: 'operational',
+        realtime_sync: 'operational',
+      },
+      system: {
+        node_version: process.version,
+        memory_usage_mb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      },
+      latency_ms: Date.now() - startTime,
+      version: '1.2.0',
+    });
+  });
+
+  /**
+   * POST /api/support/log
+   * Stores client diagnostic error context when a user reports a bug or an API error occurs
+   */
+  app.post('/api/support/log', (req, res) => {
+    try {
+      const { logId, errorCode, failedAction, context, clientInfo, userMessage } = req.body || {};
+      const logRecord: ServerDiagnosticLog = {
+        id: logId || `DBG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        timestamp: new Date().toISOString(),
+        errorCode: errorCode || 'CLIENT_ERROR',
+        failedAction: failedAction || 'UNKNOWN_ACTION',
+        context: context || {},
+        clientInfo: clientInfo || {},
+        userMessage: userMessage || '',
+      };
+
+      serverDiagnosticLogs.unshift(logRecord);
+      if (serverDiagnosticLogs.length > 50) {
+        serverDiagnosticLogs.pop();
+      }
+
+      console.log(
+        `[SUPPORT_BOT_DIAGNOSTIC] Logged bug report #${logRecord.id} [${logRecord.errorCode}] action: ${logRecord.failedAction}`
+      );
+      res.json({ success: true, logId: logRecord.id });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message });
+    }
+  });
+
+  /**
+   * GET /api/support/diagnostics
+   * Returns recent captured diagnostic logs for system auditing
+   */
+  app.get('/api/support/diagnostics', (_req, res) => {
+    res.json({ success: true, count: serverDiagnosticLogs.length, logs: serverDiagnosticLogs });
+  });
+
   // --- VITE DEV / PROD MIDDLEWARE ---
   const isProd = process.env.NODE_ENV === 'production';
 

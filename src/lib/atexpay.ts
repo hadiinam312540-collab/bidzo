@@ -220,103 +220,152 @@ export async function createAtexPayCheckout(
   const successUrl = `${effectiveAppUrl}/?payment_success=true&session_id=${sessionId}&bid_id=${bidId}`;
   const cancelUrl = `${effectiveAppUrl}/?payment_cancelled=true`;
 
-  // If live AtexPay API key is provided, attempt live session creation
-  if (isConfigured) {
-    try {
-      const endpoints = [
-        `${baseUrl}/v1/checkout/sessions`,
-        `${baseUrl}/api/v1/checkout`,
-        `${baseUrl}/v1/payment-links`,
-      ];
-
-      const atexBody = {
-        amount: Math.round(amount * 100) / 100,
-        currency: 'USD',
-        product_name: `Bidzo Leaderboard Placement - ${sessionData.user_name}`,
-        description: message || `Bid placement for ${profile_url}`,
-        payment_method,
-        return_url: returnUrl,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: {
-          session_id: sessionId,
-          bid_id: bidId,
-          amount,
-          profile_url: sessionData.profile_url,
-          user_name: sessionData.user_name,
-          handle: sessionData.handle,
-          category: sessionData.category,
-          message: sessionData.message,
-          payment_method,
-          platform,
-          return_url: returnUrl,
-          success_url: successUrl,
-          cancel_url: cancelUrl,
-        },
-      };
-
-      const res = await fetch(endpoints[0], {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(atexBody),
-      });
-
-      if (res.ok) {
-        const json = await res.json();
-        const paymentUrl =
-          json.checkout_url ||
-          json.payment_url ||
-          json.url ||
-          json.data?.checkout_url ||
-          json.data?.payment_url;
-
-        if (paymentUrl) {
-          return {
-            success: true,
-            checkout_url: paymentUrl,
-            payment_url: paymentUrl,
-            session_id: json.id || json.session_id || sessionId,
-            bid_id: bidId,
-            provider: 'atexpay',
-            mode: 'live',
-          };
-        }
-      } else {
-        const errText = await res.text();
-        console.warn('[AtexPay] Live API returned non-OK status:', res.status, errText);
-      }
-    } catch (apiErr) {
-      console.warn('[AtexPay] Live API request failed, falling back to sandbox checkout:', apiErr);
-    }
+  // --- LIVE ATEXPAY PAYMENT GATEWAY INTEGRATION ---
+  // Bypass mode has been removed: All checkouts are processed through the live AtexPay gateway
+  if (!isConfigured) {
+    return {
+      success: false,
+      error: 'AtexPay live gateway is not configured. Please ensure ATEXPAY_API_KEY is provided in environment variables.',
+    };
   }
 
-  // Seamless Sandbox Checkout URL for AI Studio preview & immediate testing
-  const searchParams = new URLSearchParams({
-    session_id: sessionId,
-    bid_id: bidId,
-    amount: amount.toString(),
-    profile_url: sessionData.profile_url,
-    category: sessionData.category,
-    name: sessionData.user_name,
-    handle: sessionData.handle,
-    msg: sessionData.message,
-    method: payment_method,
-  });
+  try {
+    // Map application category to an allowed AtexPay product category
+    const catLower = (sessionData.category || '').toLowerCase();
+    let atexCategory = 'other';
+    if (catLower.includes('market') || catLower.includes('seo')) atexCategory = 'marketing';
+    else if (catLower.includes('dev') || catLower.includes('code')) atexCategory = 'development';
+    else if (catLower.includes('design')) atexCategory = 'design';
+    else if (catLower.includes('product') || catLower.includes('agent') || catLower.includes('crypto') || catLower.includes('leader')) atexCategory = 'software';
+    else if (catLower.includes('writ')) atexCategory = 'writing';
+    else if (catLower.includes('consult')) atexCategory = 'consulting';
 
-  const sandboxCheckoutUrl = `${effectiveAppUrl}/checkout/atexpay?${searchParams.toString()}`;
+    // Price in minor units (cents, minimum 100 for $1.00)
+    const priceMinor = Math.max(100, Math.round(amount * 100));
 
-  return {
-    success: true,
-    checkout_url: sandboxCheckoutUrl,
-    payment_url: sandboxCheckoutUrl,
-    session_id: sessionId,
-    bid_id: bidId,
-    provider: 'atexpay',
-    mode: isConfigured ? 'live' : 'sandbox',
-  };
+    // Unique product title within character constraints (2-120 chars)
+    const safeUserName = (sessionData.user_name || 'Maker').replace(/[^a-zA-Z0-9\s_-]/g, '').slice(0, 30);
+    const shortBidRef = bidId.slice(-6);
+    const productName = `Bidzo Spot #${shortBidRef} - ${safeUserName}`;
+
+    // Description (10-1000 chars)
+    let productDesc = `Leaderboard rank bid on Bidzo for ${sessionData.profile_url}. Claimed by ${sessionData.handle} for $${amount}.`;
+    if (sessionData.message) {
+      productDesc += ` Note: ${sessionData.message}`;
+    }
+    if (productDesc.length < 15) {
+      productDesc += ' - Official Bidzo Live Placement.';
+    }
+    productDesc = productDesc.slice(0, 950);
+
+    const atexPayload = {
+      name: productName,
+      description: productDesc,
+      category: atexCategory,
+      delivery_type: 'service',
+      price_minor: priceMinor,
+      return_url: returnUrl,
+    };
+
+    let paymentUrl = '';
+    const res = await fetch(`${baseUrl}/v1/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(atexPayload),
+    });
+
+    if (res.status === 201) {
+      const json = await res.json();
+      paymentUrl = json.data?.checkout_url || '';
+
+      // Optionally prefill buyer name via AtexPay checkout sessions endpoint
+      if (json.data?.id && sessionData.user_name) {
+        try {
+          const sessionRes = await fetch(`${baseUrl}/v1/products/${json.data.id}/checkout-sessions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              name: sessionData.user_name,
+            }),
+          });
+          if (sessionRes.ok) {
+            const sessionJson = await sessionRes.json();
+            if (sessionJson.data?.url) {
+              paymentUrl = sessionJson.data.url;
+            }
+          }
+        } catch {
+          // Keep base checkout_url
+        }
+      }
+    } else if (res.status === 409) {
+      // Title collision: retrieve existing product_id and patch price/return_url
+      const conflictJson = await res.json();
+      const existingProdId = conflictJson.error?.product_id;
+      if (existingProdId) {
+        const patchRes = await fetch(`${baseUrl}/v1/products/${existingProdId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            price_minor: priceMinor,
+            return_url: returnUrl,
+            status: 'active',
+          }),
+        });
+        if (patchRes.ok) {
+          const patchJson = await patchRes.json();
+          paymentUrl = patchJson.data?.checkout_url || '';
+        }
+      }
+    } else {
+      const errText = await res.text();
+      console.error('[AtexPay Live API] Error response:', res.status, errText);
+      let errMsg = `Live gateway error (${res.status})`;
+      try {
+        const parsed = JSON.parse(errText);
+        if (parsed.error?.message) errMsg = parsed.error.message;
+        else if (parsed.message) errMsg = parsed.message;
+      } catch {
+        // ignore
+      }
+      return {
+        success: false,
+        error: `AtexPay gateway error: ${errMsg}`,
+      };
+    }
+
+    if (!paymentUrl) {
+      return {
+        success: false,
+        error: 'AtexPay live gateway did not return a valid checkout URL.',
+      };
+    }
+
+    return {
+      success: true,
+      checkout_url: paymentUrl,
+      payment_url: paymentUrl,
+      session_id: sessionId,
+      bid_id: bidId,
+      provider: 'atexpay',
+      mode: 'live',
+    };
+  } catch (apiErr: any) {
+    console.error('[AtexPay Live API] Request exception:', apiErr);
+    return {
+      success: false,
+      error: apiErr?.message || 'Failed to connect to AtexPay live payment gateway.',
+    };
+  }
 }
 
 /**
@@ -340,13 +389,8 @@ export function verifyAtexPaySignature(
   rawBody: string | Buffer | object,
   signatureHeader: string | string[] | undefined | null,
   secret?: string,
-  options?: { isInternal?: boolean }
+  options?: { headers?: Record<string, any> }
 ): { isValid: boolean; reason?: string } {
-  // If explicitly flagged as internal sandbox checkout from this app's UI
-  if (options?.isInternal) {
-    return { isValid: true };
-  }
-
   const rawSecret = secret || process.env.ATEXPAY_WEBHOOK_SECRET || '';
   const webhookSecret = rawSecret.trim().replace(/^["']|["']$/g, '');
 
@@ -376,6 +420,34 @@ export function verifyAtexPaySignature(
       sigString.toLowerCase() === `bearer ${s.toLowerCase()}`
     ) {
       return { isValid: true };
+    }
+  }
+
+  // Official AtexPay v1 webhook signature check:
+  // Signature format: "v1," + base64(hmac_sha256(secret, `${id}.${ts}.${rawBody}`))
+  const headers = options?.headers || {};
+  const webhookId = headers['webhook-id'] || headers['x-webhook-id'] || '';
+  const webhookTs = headers['webhook-timestamp'] || headers['x-webhook-timestamp'] || '';
+  const rawBodyStr = Buffer.isBuffer(rawBody)
+    ? rawBody.toString('utf8')
+    : typeof rawBody === 'string'
+    ? rawBody
+    : JSON.stringify(rawBody);
+
+  if (webhookId && webhookTs) {
+    for (const sec of secretCandidates) {
+      const computedBase64 = crypto
+        .createHmac('sha256', sec)
+        .update(`${webhookId}.${webhookTs}.${rawBodyStr}`)
+        .digest('base64');
+      const expectedAtexSig = `v1,${computedBase64}`;
+      if (
+        sigString === expectedAtexSig ||
+        sigString === computedBase64 ||
+        sigString.toLowerCase() === expectedAtexSig.toLowerCase()
+      ) {
+        return { isValid: true };
+      }
     }
   }
 
@@ -620,9 +692,24 @@ export async function handleAtexPayWebhook(body: Record<string, any>) {
         clicks: 0,
       };
 
-      const { error } = await supabase
+      let { error } = await supabase
         .from('leaderboard_bids')
         .upsert([bidPayload], { onConflict: 'id' });
+
+      if (error && (error.code === '42703' || error.code === 'PGRST204' || (error.message && error.message.includes('column')))) {
+        const corePayload = {
+          id: String(bidId),
+          user_name: String(stored.user_name || 'Anonymous Maker'),
+          handle: String(stored.handle || '@builder'),
+          platform: String(stored.platform || 'website'),
+          message: `${stored.profile_url}${stored.message ? ' | ' + stored.message : ''}`,
+          amount: Number(stored.amount || 0),
+          category: String(stored.category || 'Other'),
+          created_at: stored.createdAt || new Date().toISOString(),
+        };
+        const fallbackRes = await supabase.from('leaderboard_bids').upsert([corePayload], { onConflict: 'id' });
+        error = fallbackRes.error;
+      }
 
       if (!error) {
         supabaseUpdated = true;
@@ -690,24 +777,22 @@ export async function verifyCheckoutSession(sessionId: string) {
           avatar_url: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(session.handle || session.user_name)}&backgroundColor=ff7e5f`,
         };
 
-        const { error } = await supabase
+        let { error } = await supabase
           .from('leaderboard_bids')
           .upsert([fullPayload], { onConflict: 'id' });
 
-        if (error && (error.code === '42703' || (error.message && error.message.includes('column')))) {
-          // Retry with core columns only
+        if (error && (error.code === '42703' || error.code === 'PGRST204' || (error.message && error.message.includes('column')))) {
+          // Retry with core columns only, embedding profile_url into message
           await supabase.from('leaderboard_bids').upsert([
             {
               id: session.bidId,
               user_name: session.user_name,
               handle: session.handle,
               platform: session.platform,
-              message: session.message,
+              message: `${session.profile_url}${session.message ? ' | ' + session.message : ''}`,
               amount: session.amount,
               category: session.category,
-              product_url: session.profile_url,
               created_at: session.createdAt || new Date().toISOString(),
-              clicks: 0,
             },
           ], { onConflict: 'id' });
         }

@@ -93,7 +93,8 @@ export default async function handler(req: any, res: any) {
     const { isValid, reason } = verifyAtexPaySignature(
       rawBody,
       signatureHeader,
-      process.env.ATEXPAY_WEBHOOK_SECRET
+      process.env.ATEXPAY_WEBHOOK_SECRET,
+      { headers: req.headers }
     );
 
     if (!isValid) {

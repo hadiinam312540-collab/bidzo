@@ -30,17 +30,19 @@ import { TermsModal } from './components/TermsModal';
 import { PrivacyModal } from './components/PrivacyModal';
 import { SupportBot } from './components/SupportBot';
 import { Footer } from './components/Footer';
-import { AtexPayCheckoutPage } from './components/AtexPayCheckoutPage';
 import { useDesktopNotifications } from './hooks/useDesktopNotifications';
 import { useIntersectionObserver } from './hooks/useIntersectionObserver';
 
 export default function App() {
   const [mainRef, isMainVisible] = useIntersectionObserver();
   const { hasPermission, requestPermission, sendNotification } = useDesktopNotifications();
-  // Route check for direct /checkout/atexpay URL navigation
-  const [isCheckoutRoute, setIsCheckoutRoute] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && window.location.pathname.startsWith('/checkout/atexpay');
-  });
+
+  // Redirect any legacy bypass /checkout path directly to root
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/checkout')) {
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   // State: real database bids vs displayed leaderboard bids (with seed fallback when database is empty)
   const [realBids, setRealBids] = useState<BidEntry[]>([]);
@@ -455,17 +457,6 @@ export default function App() {
       }
     }
   };
-
-  if (isCheckoutRoute) {
-    return (
-      <AtexPayCheckoutPage
-        onBackToApp={() => {
-          window.history.pushState({}, '', '/');
-          setIsCheckoutRoute(false);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-slate-900 font-sans selection:bg-blue-600 selection:text-white flex flex-col">

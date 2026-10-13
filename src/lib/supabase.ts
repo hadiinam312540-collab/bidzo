@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { BidEntry, DealEntry } from '../types';
+import { BidEntry, DealEntry, Platform } from '../types';
 import { INITIAL_BIDS } from './mockData';
 
 // Local storage keys
@@ -188,20 +188,29 @@ export async function fetchLeaderboardBids(): Promise<FetchLeaderboardBidsResult
 
       if (Array.isArray(data) && data.length > 0) {
         // Map database columns to BidEntry
-        const mapped: BidEntry[] = data.map(item => ({
-          id: String(item.id || `bid-${Math.random().toString(36).slice(2, 9)}`),
-          user_name: item.user_name || 'Anonymous Maker',
-          handle: item.handle || '@builder',
-          platform: item.platform || 'website',
-          message: item.message || '',
-          amount: Number(item.amount) || 0,
-          category: item.category || 'Other',
-          product_url: item.product_url || item.profile_url || '#',
-          created_at: item.created_at || new Date().toISOString(),
-          clicks: Number(item.clicks) || 0,
-          avatar_url: item.avatar_url || `https://api.dicebear.com/7.x/shapes/svg?seed=${item.handle || item.user_name}`,
-          is_verified: Boolean(item.is_verified),
-        }));
+        const mapped: BidEntry[] = data.map(item => {
+          let pUrl = item.product_url || item.profile_url || item.url || '';
+          let msg = item.message || '';
+          if (!pUrl && msg.startsWith('http')) {
+            const parts = msg.split(' | ');
+            pUrl = parts[0];
+            msg = parts.slice(1).join(' | ');
+          }
+          return {
+            id: String(item.id || `bid-${Math.random().toString(36).slice(2, 9)}`),
+            user_name: item.user_name || 'Anonymous Maker',
+            handle: item.handle || '@builder',
+            platform: (item.platform as Platform) || 'website',
+            message: msg,
+            amount: Number(item.amount) || 0,
+            category: item.category || 'Other',
+            product_url: pUrl || '#',
+            created_at: item.created_at || new Date().toISOString(),
+            clicks: Number(item.clicks) || 0,
+            avatar_url: item.avatar_url || `https://api.dicebear.com/7.x/shapes/svg?seed=${item.handle || item.user_name}`,
+            is_verified: Boolean(item.is_verified),
+          };
+        });
         return { data: mapped, source: 'supabase', isFallback: false };
       }
 
@@ -250,7 +259,7 @@ export async function submitLeaderboardBid(entry: Omit<BidEntry, 'id' | 'created
 
   if (client) {
     try {
-      const { error } = await client
+      let { error } = await client
         .from('leaderboard_bids')
         .insert([{
           id: newBid.id,
@@ -265,12 +274,29 @@ export async function submitLeaderboardBid(entry: Omit<BidEntry, 'id' | 'created
           clicks: 0,
         }]);
 
+      if (error && (error.code === 'PGRST204' || error.message?.includes('column') || error.code === '42703')) {
+        // Fallback for schema where product_url is packed into message
+        const fallbackRes = await client
+          .from('leaderboard_bids')
+          .insert([{
+            id: newBid.id,
+            user_name: newBid.user_name,
+            handle: newBid.handle,
+            platform: newBid.platform,
+            message: `${newBid.product_url}${newBid.message ? ' | ' + newBid.message : ''}`,
+            amount: newBid.amount,
+            category: newBid.category,
+            created_at: newBid.created_at,
+          }]);
+        error = fallbackRes.error;
+      }
+
       if (error) {
         console.warn('Supabase insert failed, saving to local store:', error);
       } else {
         // Also sync local cache
         const current = getLocalBids();
-        saveLocalBids([newBid, ...current]);
+        saveLocalBids([newBid, ...current.filter(b => b.id !== newBid.id)]);
         return { success: true, data: newBid };
       }
     } catch (err: unknown) {
